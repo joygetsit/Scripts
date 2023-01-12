@@ -50,6 +50,12 @@ echo "Namespace $NW_Namespace_1 ports"
 ip -n $NW_Namespace_1 a
 
 << comment
+# If namespaces are used, you can open wireshark captures using below commands
+sudo ip netns exec nsTX tshark -i enp1s0f0 -a duration:2 -w ../TXv1.pcap &
+sudo ip netns exec nsRX tshark -i enp1s0f1 -a duration:2 -w ../RXv1.pcap
+comment
+
+<< comment
 # This may not be needed, verify once and remove
 
 # For enabling successful ping/iperf between the two namespaces,

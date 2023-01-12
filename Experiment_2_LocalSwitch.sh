@@ -3,7 +3,9 @@
 # Author: Joydeep Pal
 # Date: Oct 2022
 # Description: Broadly, it transmits heavy traffic (using iperf)
-# to the destination end-host via the local switch and then analyze the performance.
+# to the destination end-host via the local switch.
+# Use relevant python script to analyze the performance.
+
 # It uses ssh to run remote commands and
 # you should have set up ssh and configured passwordless ssh.
 
@@ -70,7 +72,6 @@ eval tshark -r $TXfile $args -Y 'udp.dstport==4000' > TempCSVfiles/TXv1.csv &
 eval tshark -r $RXfile $args -Y 'udp.dstport==4000' > TempCSVfiles/RXv1.csv
 
 echo 'Step 6: Process using python script'
-#./OutOfOrderCount.py
 #./Latency_v2.py
 
 echo 'Step 7: Open wireshark captures'

@@ -20,12 +20,16 @@ dur=(10) # 60 300)
 #DurationX=18
 
 Port=3002
+
 RemoteIP=10.114.64.248 # 10.114.64.107 #
+
 RemoteCaptureEthernetInterface=enp1s0f0 #enp5s0 #
 RemoteCaptureInterfaceIP=11.11.11.18 # 10.114.64.107 #
 LocalCaptureEthernetInterface=enp1s0f0 # enp3s0 #
 LocalCaptureInterfaceIP=11.11.11.21 # 10.114.64.70 #
+
 ScriptFolder=~/Documents/Scripts
+
 TXfile=/tmp/tx_trial.pcap
 RXfile=/tmp/rx_trial.pcap
 RemoteCapture=$TXfile
