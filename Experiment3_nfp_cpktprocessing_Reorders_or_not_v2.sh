@@ -2,14 +2,14 @@
 
 # Author: Joydeep Pal
 # Date: Nov 2022
-# Description:
-# Broadly, it transmits and receives packets using iperf,
+# Description: Broadly, it transmits and receives packets using iperf,
 # through our MicroC program on NFP
 # and then analyzes the performance.
+# It uses ssh to run remote commands and
+# you should have set up ssh and configured passwordless ssh.
 
-# You should have set up ssh and configured passwordless ssh.
 parstr=(1) # 2 3)
-bw=(200M) #(100M) #
+bw=(500M) #(100M) #
 pktsize=(1000) #(50 1000 1470) #(1470) #
 dur=(10) # 60 300)
 
@@ -34,10 +34,10 @@ RemoteCapture=$TXfile
 # 1. Assign permissions to $TXfile and $RXfile
 
 # Assign IP addresses to local and remote interfaces and remove them at the end of the test
-sudo ip a add $LocalCaptureInterfaceIP/24 dev $LocalCaptureEthernetInterface
+# sudo ip a add $LocalCaptureInterfaceIP/24 dev $LocalCaptureEthernetInterface
 #sudo ip a add 11.11.11.21/24 dev enp1s0f0
-ssh zenlab@$RemoteIP
-"sudo ip a add $RemoteCaptureInterfaceIP/24 dev $RemoteCaptureEthernetInterface"
+#ssh zenlab@$RemoteIP \
+#"sudo ip a add $RemoteCaptureInterfaceIP/24 dev $RemoteCaptureEthernetInterface"
 #sudo ip a add 11.11.11.18/24 dev enp1s0f0
 
 # System Design:
@@ -50,7 +50,7 @@ ssh zenlab@$RemoteIP
 
 echo "Step 1: Run iperf server (Rx) in local node"
 # Note: Kill iperf server processes at the end of the test
-iperf -B $LocalCaptureInterfaceIP -s -u -p $Port > /dev/null &
+iperf -B $LocalCaptureInterfaceIP -s -u -p $Port & #> /dev/null &
 sleep 2
 
 TestNo=1
@@ -58,17 +58,15 @@ for BandwidthTest in "${bw[@]}"; do
   for PacketSize in "${pktsize[@]}"; do
     for Duration in "${dur[@]}"; do
       for ParallelStreams in "${parstr[@]}"; do
-        for (( i = 1; i <= 1; i++ )); do
-          DurationX=$(($Duration + 10))
+        for ((TrialNo=1; TrialNo <= 1; TrialNo++)); do
+          DurationX=$(($Duration+10))
           echo $PacketSize, $Duration, $DurationX, $BandwidthTest, $ParallelStreams
-          echo "Trial:"$i, "Test No.:"$TestNo
+          echo "Trial:"$TrialNo, "Test No.:"$TestNo
           echo "Step 2: Running PacketCapture on Tx and Rx nodes"
           tshark -i $LocalCaptureEthernetInterface -Q -a duration:$DurationX -w $RXfile &
           ssh zenlab@$RemoteIP "tshark -i $RemoteCaptureEthernetInterface -Q -a duration:$DurationX -w $RemoteCapture" &
 
           echo "Step 3: Run iperf client (Tx) command in remote node"
-          : '
-          '
           sleep 2
           ssh zenlab@$RemoteIP " \
           iperf -B $RemoteCaptureInterfaceIP -c $LocalCaptureInterfaceIP -u -t $Duration \
@@ -105,9 +103,9 @@ killall iperf
 echo "Done !!"
 
 # Remove assigned IP addresses to local and remote interfaces
-ssh zenlab@$RemoteIP
-"sudo ip a del $RemoteCaptureInterfaceIP/24 dev $RemoteCaptureEthernetInterface"
-sudo ip a del $LocalCaptureInterfaceIP/24 dev $LocalCaptureEthernetInterface
+#ssh zenlab@$RemoteIP
+#"sudo ip a del $RemoteCaptureInterfaceIP/24 dev $RemoteCaptureEthernetInterface"
+#sudo ip a del $LocalCaptureInterfaceIP/24 dev $LocalCaptureEthernetInterface
 
 << comment
 ### Step 2: Open wireshark capture on multinic ports and save to tmp folder
@@ -124,14 +122,4 @@ sudo ip netns exec nsTX ping -f -B -Q 5 -c 10 11.11.11.11
 #
 #### Step 6: Start iperf3 client to transmit on multinic Tx port
 #xterm -hold -e 'sudo ip netns exec nsTX iperf3 -c 11.11.11.11 -u -l 1000 -t 5 -p 4000 -b 100M' #-P 2
-
-### How to run multiple commands through ssh
-### Either simultaneously using &
-### Or one by one using &&
-ssh zenlab@$RemoteIP " \
-iperf -s >/dev/null & \
-tshark && \
-ls \
-"
 comment
-

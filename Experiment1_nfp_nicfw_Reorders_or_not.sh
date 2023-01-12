@@ -2,8 +2,7 @@
 
 # Author: Joydeep Pal
 # Date: Nov 2022
-# Description:
-# Broadly, it transmits and receives packets using iperf,
+# Description: Broadly, it transmits and receives packets using iperf,
 # through out NIC firmware on NFP (nic_firmware)
 # and then analyzes the performance.
 

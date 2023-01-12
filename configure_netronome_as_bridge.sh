@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# Author: Joydeep Pal
+# Date: Nov 2022
+# Description: Configures Netronome as a bridge/switch
+# using Linux 'ip link' utility. And also remove.
+
 echo "Current Time = "`date`
 echo "HOSTNAME = "`hostname`
 echo "USER ID = "`whoami`
 echo "IP ADDRESS = "`ip a s enp5s0 | grep "inet " | cut -f6 -d " "`
 
-
-#ip a
 sudo ip link add Switch1 type bridge
 sudo ip link set enp1s0np0 master Switch1
 sudo ip link set enp1s0np1 master Switch1
