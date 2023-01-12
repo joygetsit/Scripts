@@ -79,7 +79,7 @@ echo 'Step 7: Open wireshark captures'
 # wireshark -r $RXfile &
 
 killall iperf
-echo "Done !!"
+echo 'Done !!'
 
 # To segregate ssh output to this xterm rather than in the same terminal,
 # start an xterm and execute ssh command
