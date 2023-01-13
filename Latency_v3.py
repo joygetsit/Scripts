@@ -2,12 +2,9 @@
 
 import sys
 import pandas as pd
-import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("whitegrid")
-# import os
-# os.chdir("Codes")
 
 dftx = pd.read_csv("TempCSVfiles/TXv1.csv")
 dfrx = pd.read_csv("TempCSVfiles/RXv1.csv")
@@ -18,6 +15,7 @@ print(dfrx['vlan.id'].value_counts())
 Time_Data = pd.merge(dftx, dfrx[['ip.src', 'ip.id', 'vlan.id', 'frame.time_epoch']], on=['ip.src', 'ip.id', 'vlan.id'], how='left')
 Time_Data['delay(s)'] = Time_Data.apply(lambda row: row["frame.time_epoch_y"] - row["frame.time_epoch_x"], axis=1)
 Time_Data["Packet Number"] = Time_Data.index
+# Time_Data["Packet Number"] = Time_Data["ip.id"].apply(lambda u: int(u, 0))
 
 # rte = dftx.groupby(['ip.id', 'udp.dstport']).size().reset_index().rename(columns={0: 'count'})
 # print(rte[rte['count'] != 1])

@@ -3,15 +3,15 @@
 # Author: Joydeep Pal
 # Date: Nov 2022
 # Description: Configures MultiNIC as isolated network namespaces with
-# access to different physical ports. This helps when sending and receiving ports
+# access to different physical ports. This helps when Tx and Rx ports
 # are on the same PC and iperf/ping commands have to be used.
 # Otherwise, these commands don't send packets out to the wire
-# and kernel routes it internally.
+# because kernel routes it internally.
 
 # Run as sudo
 
 # NOTE: To delete created namespaces, run above command with argument 'delete'
-# i.e. sudo ./configure_multinic.sh delete
+# i.e. sudo ./Configure_MultiNIC.sh delete
 
 PORT_0=enp1s0f0
 PORT_1=enp1s0f1
@@ -53,15 +53,6 @@ ip -n $NW_Namespace_1 a
 # If namespaces are used, you can open wireshark captures using below commands
 sudo ip netns exec nsTX tshark -i enp1s0f0 -a duration:2 -w ../TXv1.pcap &
 sudo ip netns exec nsRX tshark -i enp1s0f1 -a duration:2 -w ../RXv1.pcap
-comment
-
-<< comment
-# This may not be needed, verify once and remove
-
-# For enabling successful ping/iperf between the two namespaces,
-# add static arp entries to the namesapces
-ip netns exec $NW_Namespace_0 arp -s $IPRX $MAC_ADDRESS_1
-ip netns exec $NW_Namespace_1 arp -s $IPTX $MAC_ADDRESS_0
 comment
 
 if [ "$1" = delete ]; then

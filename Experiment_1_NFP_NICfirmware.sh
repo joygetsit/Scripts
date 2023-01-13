@@ -2,52 +2,88 @@
 
 # Author: Joydeep Pal
 # Date: Nov 2022
-# Description: Broadly, it transmits and receives packets using iperf,
-# through out NIC firmware on NFP (nic_firmware)
-# and then analyzes the performance.
+# Description: Broadly, it transmits and receives packets (using iperf),
+# via NFP running NIC firmware (nic_firmware).
+# Use relevant python script to analyze the performance.
 
-## If Netronome Agilio is running nic_firmware and has to be configured as a switch/bridge
-## Use sudo ./configure_netronome_as_bridge.sh on Netronome system
-#ssh zenlab@10.114.64.107 "sudo ./configure_netronome_as_bridge.sh"
-## One way is to send script to that system using scp and running the script remotely i.e.
-#LocalFile=~"$ScriptFolder"/configure_netronome_as_bridge.sh
-#RemoteFile=~/Documents/tests/configure_netronome_as_bridge.sh
-#scp $LocalFile zenlab@10.114.64.107:$RemoteFile
-## Execute and show ouput in local xterm
-#xterm -hold -e ssh -t zenlab@10.114.64.107 "sudo  Documents/tests/configure_netronome_as_bridge.sh" &
-## Doesn't show all expected output, but I don't need to solve this now
-## To remove Switch functionality and free the Ethernet ports, so that Netronome behaves as NIC,
-## run command with argument "delete"
-## Other way is to use ssh to run this local script remotely without transferring the script
+# It uses ssh to run remote commands and
+# you should have set up ssh and configured passwordless ssh.
 
-### Step 3: Open tshark capture file on Netronome ports
-xterm -hold -e ssh -t zenlab@10.114.64.107 "sudo tshark -i enp1s0np0 --autostop duration:30 \
--w /tmp/tx_nfp_p0_trial1.pcap" &
-xterm -hold -e ssh -t zenlab@10.114.64.107 "sudo tshark -i enp1s0np1 --autostop duration:30 \
--w /tmp/tx_nfp_p1_trial1.pcap" &
-sleep 20
+# Script parameters:
+BandwidthTest=500M
+PacketSize=1000
+Duration=5
+DurationCapture=10
+ParallelStreams=1
 
-### Step 4: Open wireshark capture on multinic ports and save to tmp folder
-sudo ip netns exec nsTX wireshark -i enp1s0f0 -k --autostop duration:10 -Y udp.dstport==4000 -w /tmp/tx_multinic_trial1.pcap &
-sudo ip netns exec nsRX wireshark -i enp1s0f1 -k --autostop duration:10 -Y udp.dstport==4000 -w /tmp/rx_multinic_trial1.pcap &
-sleep 1
+RemoteIP=10.114.64.107
 
-### Step 5: Start iperf3 server on multinic Rx port
-xterm -hold -e 'sudo ip netns exec nsRX iperf3 -s -p 4000 -1' &
-sleep 1
+TxIP=11.11.11.10
+RxIP=11.11.11.11
+Port=4000
 
-### Step 6: Start iperf3 client to transmit on multinic Tx port
-xterm -hold -e 'sudo ip netns exec nsTX iperf3 -c 11.11.11.11 -u -l 1000 -t 5 -p 4000 -b 500M' #-P 2
+Txfile=/tmp/tx_trial.pcap
+Rxfile=/tmp/rx_trial.pcap
 
-### Step 7: Convert pcap to csv
-sudo tshark -r /tmp/rx_multinic_trial1.pcap -T fields -E header=y -E separator=, \
--e ip.id -e ip.src -e ip.dst -e udp.srcport -e udp.dstport -e frame.time_epoch -Y 'udp.dstport==4000' > TempCSVfiles/TXv1.csv
-sudo tshark -r /tmp/tx_multinic_trial1.pcap -T fields -E header=y -E separator=, \
--e ip.id -e ip.src -e ip.dst -e udp.srcport -e udp.dstport -e frame.time_epoch -Y 'udp.dstport==4000' > TempCSVfiles/RXv1.csv
+# System Design:
+# Using Netronome Ethernet ports as Switch ports
+# (PC#1) MultiNIC_TX_port --> NFP_P0 --> NFP_P1 --> (PC #1) MultiNIC_RX_port
 
-### Step 8: Process using python script
-./OutOfOrderCount.py
+<< comment
+# Notes on iperf and iperf3
+# Iperf gives transport layer bandwidth, so actual bandwidth is a little more
+## iperf3 flags
+# -b 0 -> Max bandwidth of port (Verified)
+# -t for time, -n for bytes, -k for no. of pkts
+# -P for number of parallel streams, max bandwidth gets divided between these streams
+# -l for length of UDP/TCP payload, related to fragmentation
+# Also length increase -> bandwidth utilisation increase
 
+# Kill iperf server processes at the end of the test
+# The argument '-1' with iperf3 closes iperf3 server automatically after 1 session,
+# or you can kill iperf3 at the end.
+# Better to kill it at the end of the test to maintain uniformity in your codes
 
+# To segregate ssh output to this xterm rather than in the same terminal,
+# start an xterm and execute ssh command
+nohup xterm -hold -e ssh zenlab@10.114.64.107 "" &
 
+# Possible errors and resolutions:
+# 1. Assign permissions to $TXfile and $RXfile
+comment
 
+echo 'Step 0a: Configure network namespaces using script, if both tx and rx ports are on same PC'
+echo 'Step 0b: Configure Netronome as a switch using the script'
+echo 'Step 0c: Configure IP addresses of tx and rx ports, remove at the end'
+
+echo 'Step 1: Start packet capture (using tshark) on the Ethernet ports.
+      Currently running on Netronome ports'
+ssh zenlab@$RemoteIP "sudo tshark -i enp1s0np0 --autostop duration:$DurationCapture -w /tmp/tx_nfp_p0_trial1.pcap" &
+ssh zenlab@$RemoteIP "sudo tshark -i enp1s0np1 --autostop duration:$DurationCapture -w /tmp/tx_nfp_p1_trial1.pcap" &
+
+echo 'Step 2: Start packet capture on tx and rx MultiNIC ports and save to /tmp folder'
+sudo ip netns exec nsTX wireshark -k -i enp1s0f0 --autostop duration:$DurationCapture -Y udp.dstport==$Port -w $Txfile &
+sudo ip netns exec nsRX wireshark -k -i enp1s0f1 --autostop duration:$DurationCapture -Y udp.dstport==$Port -w $Rxfile &
+
+echo 'Step 3: Start packet rx (iperf3 server)'
+sudo ip netns exec nsRX iperf3 -s -p $Port -1 &
+sleep 2
+
+echo 'Step 4: Start packet tx (iperf3 client)'
+sudo ip netns exec nsTX iperf3 -c $RxIP -u -l $PacketSize -t $Duration -p $Port -b $BandwidthTest -P $ParallelStreams
+<< comment
+echo 'Step 4: Ping from TX to RX'
+sudo ip netns exec nsTX ping -f -B -Q 5 -c 10 $RxIP
+comment
+
+echo 'Step 5: Convert pcap to csv'
+args="-T fields -E header=y -E separator=, -e ip.id -e ip.src -e ip.dst \
+-e udp.srcport -e udp.dstport -e frame.time_epoch"
+sudo tshark -r $Txfile $args -Y 'udp.dstport==$Port' > TempCSVfiles/TXv1.csv
+sudo tshark -r $Rxfile $args -Y 'udp.dstport==$Port' > TempCSVfiles/RXv1.csv
+
+echo 'Step 6: Process using python script'
+
+echo 'Step 7: Open wireshark captures'
+# wireshark -r $TXfile &
+# wireshark -r $RXfile &

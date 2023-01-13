@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("whitegrid")
-# numpy.set_printoptions(threshold=sys.maxsize)
-# dftx = pd.read_csv("../../TXport0.csv")
 dftx = pd.read_csv("TempCSVfiles/TXv1.csv")
 dfrx = pd.read_csv("TempCSVfiles/RXv1.csv")
 
