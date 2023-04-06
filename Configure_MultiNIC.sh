@@ -42,6 +42,8 @@ ip -n $NW_Namespace_1 addr add $IPRX/24 dev $PORT_1
 ip -n $NW_Namespace_0 link set $PORT_0 up
 ip -n $NW_Namespace_1 link set $PORT_1 up
 
+sleep 1
+
 echo "Root namespace ports"
 ip a
 echo "Namespace $NW_Namespace_0 ports"

@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("whitegrid")
-dftx = pd.read_csv("TempCSVfiles/TXv1.csv")
-dfrx = pd.read_csv("TempCSVfiles/RXv1.csv")
+dftx = pd.read_csv("../TempCSVfiles/TXv1.csv")
+dfrx = pd.read_csv("../TempCSVfiles/RXv1.csv")
 
 # Counts
 TX_Pkts = dftx.shape[0]
@@ -56,4 +56,4 @@ FrameData = [sys.argv[1], sys.argv[2], sys.argv[3],
              Corrupted_Packets, round((Corrupted_Packets*100/RX_Pkts),2),
              round((Corrupted_Packets*100/TX_Pkts),2), pd.Timestamp.today()]
 FrameDf = pd.DataFrame([FrameData])
-FrameDf.to_csv("TempCSVfiles/Counts.csv", mode='a', header=False, index=False)
+FrameDf.to_csv("../TempCSVfiles/Counts.csv", mode='a', header=False, index=False)

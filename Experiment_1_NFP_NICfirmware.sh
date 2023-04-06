@@ -79,8 +79,8 @@ comment
 echo 'Step 5: Convert pcap to csv'
 args="-T fields -E header=y -E separator=, -e ip.id -e ip.src -e ip.dst \
 -e udp.srcport -e udp.dstport -e frame.time_epoch"
-sudo tshark -r $Txfile $args -Y 'udp.dstport==$Port' > TempCSVfiles/TXv1.csv
-sudo tshark -r $Rxfile $args -Y 'udp.dstport==$Port' > TempCSVfiles/RXv1.csv
+sudo tshark -r $Txfile $args -Y 'udp.dstport==$Port' > ../TempCSVfiles/TXv1.csv
+sudo tshark -r $Rxfile $args -Y 'udp.dstport==$Port' > ../TempCSVfiles/RXv1.csv
 
 echo 'Step 6: Process using python script'
 

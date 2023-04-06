@@ -10,8 +10,8 @@ sns.set_style("whitegrid")
 
 plt.rcParams['savefig.format']='pdf'
 # numpy.set_printoptions(threshold=sys.maxsize)
-dftx = pd.read_csv("TempCSVfiles/TXv1.csv")
-dfrx = pd.read_csv("TempCSVfiles/RXv1.csv")
+dftx = pd.read_csv("../TempCSVfiles/TXv1.csv")
+dfrx = pd.read_csv("../TempCSVfiles/RXv1.csv")
 
 print(dftx['udp.srcport'].value_counts())
 print(dftx['udp.dstport'].value_counts())
@@ -23,6 +23,6 @@ Field1 = np.where(dftx['ip.id'] != dfrx['ip.id'])
 FieldList = list(Field1[0])
 print("Length FieldList : ", len(FieldList)) #, FieldList)
 plt.plot(FieldList)
-name = f'TempFigures/Fig1_{round(time.time())}'
+name = f'../TempFigures/Fig1_{round(time.time())}'
 plt.savefig(name)
 # plt.show(block=False)

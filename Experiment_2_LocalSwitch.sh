@@ -55,8 +55,8 @@ echo 'Step 5: Convert pcap to csv'
 args="-T fields -E header=y -E separator=, \
 -e ip.id -e ip.src -e ip.dst -e udp.srcport -e udp.dstport \
 -e frame.time_epoch -e udp.length.bad -e udp.length -e data.len"
-eval tshark -r $TXfile $args -Y 'udp.dstport==4000' > TempCSVfiles/TXv1.csv &
-eval tshark -r $RXfile $args -Y 'udp.dstport==4000' > TempCSVfiles/RXv1.csv
+eval tshark -r $TXfile $args -Y 'udp.dstport==4000' > ../TempCSVfiles/TXv1.csv &
+eval tshark -r $RXfile $args -Y 'udp.dstport==4000' > ../TempCSVfiles/RXv1.csv
 
 echo 'Step 6: Process using python script'
 

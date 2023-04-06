@@ -15,7 +15,7 @@ Notes:
 # Use sudo ./Configure_NFP_as_switch.sh on Netronome system
 ssh zenlab@10.114.64.107 "sudo ./Configure_NFP_as_switch.sh"
 # One way is to send script to that system using scp and running the script remotely i.e.
-LocalFile=~"$ScriptFolder"/Configure_NFP_as_switch.sh
+LocalFile=Configure_NFP_as_switch.sh
 RemoteFile=~/Documents/tests/Configure_NFP_as_switch.sh
 scp $LocalFile zenlab@10.114.64.107:$RemoteFile
 # Execute and show ouput in local xterm

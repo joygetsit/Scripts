@@ -84,8 +84,8 @@ for BandwidthTest in "${bw[@]}"; do
           -e ip.id -e ip.src -e ip.dst -e udp.srcport -e udp.dstport \
           -e frame.time_epoch -e udp.length.bad -e udp.length -e data.len"
           args2='!icmp && !mdns && !arp && udp.dstport==3002'
-          eval tshark -r $TXfile $args -Y \'$args2\' > TempCSVfiles/TXv1.csv &
-          eval tshark -r $RXfile $args -Y \'$args2\' > TempCSVfiles/RXv1.csv
+          eval tshark -r $TXfile $args -Y \'$args2\' > ../TempCSVfiles/TXv1.csv &
+          eval tshark -r $RXfile $args -Y \'$args2\' > ../TempCSVfiles/RXv1.csv
 
           echo 'Step 6: Process using python script'
 
