@@ -9,32 +9,34 @@
 # It uses ssh to run remote commands and
 # you should have set up ssh and configured passwordless ssh.
 
+# System Design:
+#                               ____________________
+# (PC#1) MultiNIC_TX_port --> | NFP_P0 --> NFP_P1 | --> (PC #2) MultiNIC_RX_port
+#                              ---------------------
+
+whoami
+
 # Script parameters:
 BandwidthTest=100M
 PacketSize=1000
 Duration=10
 DurationCapture=18
 ParallelStreams=1
+RemoteIP=10.114.64.248 # 10.114.64.107 #
+LocalCaptureEthernetInterface=enp1s0f0 # enp3s0 #
+LocalCaptureInterfaceIP=11.11.11.21 # 10.114.64.70 #
+RemoteCaptureEthernetInterface=enp1s0f0 #enp5s0 #
+RemoteCaptureInterfaceIP=11.11.11.18 # 10.114.64.107 #
+Port=3002
 
 parstr=(1) # 2 3)
 bw=(500M) #(100M) #
 pktsize=(1000) #(50 1000 1470) #(1470) #
 dur=(10) # 60 300)
 
-RemoteIP=10.114.64.248 # 10.114.64.107 #
-
-RemoteCaptureEthernetInterface=enp1s0f0 #enp5s0 #
-RemoteCaptureInterfaceIP=11.11.11.18 # 10.114.64.107 #
-LocalCaptureEthernetInterface=enp1s0f0 # enp3s0 #
-LocalCaptureInterfaceIP=11.11.11.21 # 10.114.64.70 #
-Port=3002
-
 TXfile=/tmp/tx_trial.pcap
 RXfile=/tmp/rx_trial.pcap
 RemoteCapture=$TXfile
-
-# System Design:
-# (PC#1) MultiNIC_TX_port --> NFP_P0 --> NFP_P1 --> (PC #2) MultiNIC_RX_port
 
 << comment
 # Assign IP addresses to local and remote interfaces and remove them at the end of the test
@@ -60,7 +62,7 @@ for BandwidthTest in "${bw[@]}"; do
     for Duration in "${dur[@]}"; do
       for ParallelStreams in "${parstr[@]}"; do
         for ((TrialNo=1; TrialNo <= 1; TrialNo++)); do
-          $DurationCapture=$(($Duration+10))
+          DurationCapture=$(($Duration+10))
           echo $PacketSize, $Duration, $DurationCapture, $BandwidthTest, $ParallelStreams
           echo "Trial:"$TrialNo, "Test No.:"$TestNo
           echo 'Step 2: Running PacketCapture on Tx and Rx nodes'
@@ -98,3 +100,4 @@ done
 
 killall iperf
 echo 'Done !!'
+echo ' '
