@@ -11,7 +11,11 @@
 # you should have set up ssh and configured passwordless ssh.
 
 # System Design:
-# (PC#1) MultiNIC_TX_port --> NFP_P0 --> NFP_P1 --> (PC #2) MultiNIC_RX_port
+#                               ____________________
+# (PC#1) MultiNIC_TX_port --> | NFP_P0 --> NFP_P1 | --> (PC #2) MultiNIC_RX_port
+#                              ---------------------
+
+whoami
 
 # Script parameters:
 BandwidthTest=100M
@@ -41,6 +45,7 @@ echo 'Step 2: Start packet tx (Mixed VLAN Traffic)'
 tcpreplay -i $LocalCaptureEthernetInterface -M $BandwidthSTFlow --duration=$Duration ../VLAN_PCAP_Files/iperf_3003_VLAN_3_packets_Size_1000B_test6.pcap &
 tcpreplay -i $LocalCaptureEthernetInterface -M $BandwidthBEFlow --duration=$Duration ../VLAN_PCAP_Files/iperf_3002_VLAN_2_packets_Size_1000B_test6.pcap
 
+echo ' '
 echo 'Step 3: Check if packet capture successful by checking if file exists in remote node'
 sleep 10
 ssh zenlab@$RemoteIP "ls /tmp/ | grep rx"        

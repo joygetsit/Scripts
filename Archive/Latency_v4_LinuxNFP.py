@@ -25,17 +25,21 @@ else:
 
 TestMetadata = pd.DataFrame()
 
+TestMetadata['Bandwidth'] = {'ST': ST, 'BE': BE}
+TestMetadata['Timestamp'] = FileDate
+TestMetadata['Duration'] = Duration
+
 FigureName = '../TempFigures/' + 'S_' + ST + '_B_' + BE + '_Dur_' + Duration + 's_' + FileDate + '.png'
 MergedDatasetFilename = '../TempCSVfiles/' + 'S_' + ST + '_B_' + BE + '_Dur_' + Duration + 's_' + FileDate + '.csv'
-dftx = pd.read_csv("../TempCSVfiles/TXv2.csv")
-dfrx = pd.read_csv("../TempCSVfiles/RXv2.csv")
+dftx = pd.read_csv("../../TempCSVfiles/TXv2.csv")
+dfrx = pd.read_csv("../../TempCSVfiles/RXv2.csv")
 
-# dftx.rename(columns={"udp.dstport": "Flows"}, inplace=True)
-# dfrx.rename(columns={"udp.dstport": "Flows"}, inplace=True)
 dftx.rename(columns={"vlan.id": "Flows", 'frame.time_epoch': 'Epoch Time (Tx)'}, inplace=True)
 dfrx.rename(columns={"vlan.id": "Flows", 'frame.time_epoch': 'Epoch Time (Rx)'}, inplace=True)
-dftx['Flows'].replace({2: 'ST', 3: 'BE'}, inplace=True)
-dfrx['Flows'].replace({2: 'ST', 3: 'BE'}, inplace=True)
+dftx['Flows'].replace({2: 'ST', 3: 'BE', 4: 'ST2'}, inplace=True)
+dfrx['Flows'].replace({2: 'ST', 3: 'BE', 4: 'ST2'}, inplace=True)
+# dftx.rename(columns={"udp.dstport": "Flows"}, inplace=True)
+# dfrx.rename(columns={"udp.dstport": "Flows"}, inplace=True)
 # Time_Data['Flows'] = Time_Data['Flows'].replace([3001], 'ST')
 # Time_Data['Flows'] = Time_Data['Flows'].replace([3002], 'BE')
 
@@ -56,6 +60,7 @@ dftx = dftx[~dftx['Flows'].isnull()]
 dfrx = dfrx[~dfrx['Flows'].isnull()]
 # dfrx = dfrx.loc[dfrx['Flows'].isin([3001, 3002])]
 
+# Merge Tx and Rx data to one dataframe
 Time_Data = pd.merge(dftx, dfrx[['ip.src', 'ip.id', 'Flows', 'Epoch Time (Rx)']],
                      on=['ip.src', 'ip.id', 'Flows'],
                      how='left')
@@ -64,12 +69,7 @@ Time_Data.to_csv(MergedDatasetFilename, mode='w')
 # This dataframe has all Tx packets and hence can be used to number the packets
 Time_Data["Packet Number"] = Time_Data.index
 Time_Data['Latency (ms)'] = (Time_Data["Epoch Time (Rx)"] - Time_Data["Epoch Time (Tx)"]) * 1000
-# Time_Data['Latency (ms)'] =
-# Time_Data.apply(lambda row: (row["Epoch Time (Rx)"] - row["Epoch Time (Tx)"])*1000, axis=1)
 
-# Time_Data['Epoch Time (Tx)'] = pd.to_datetime(Time_Data['Epoch Time (Tx)'], unit='s')
-# Time_Data['Epoch Time (Rx)'] = pd.to_datetime(Time_Data['Epoch Time (Rx)'], unit='s')
-# Time_Data['Latency (ms)'] = pd.to_datetime(Time_Data['Latency (ms)'], unit='s')
 Time_Data['Missed'] = Time_Data["Epoch Time (Rx)"].isnull()
 
 # Define min and max limits and use them to plot graph over whole range
@@ -103,61 +103,64 @@ AggregatedCount['Loss %'] = AggregatedCount['Loss'] * 100 / AggregatedCount['Pac
 ''' Lost packets '''
 LostPacketsList = Time_Data[Time_Data['Missed']]
 
-''' Print all information '''
-# print('Tx Count = ' + str(TxCountTotal))
-# print('TxCountOfEachFlow', TxCountOfEachFlow)
-# dftx['Flows'].value_counts()[3.0]
-
-# Printing errrors thgen use below code
-# if 'ST' in RxPacketCount.index:
-#     A = RxPacketCount['ST'] * 100 / TxPacketCount['ST']
-#     print(f"VLAN ST Rx % = {A:.2f}")
-# else:
-#     print(f'VLAN ST Rx % = 0')
-# rte = dftx.groupby(['ip.id', 'udp.dstport']).size().reset_index().rename(columns={0: 'count'})
-
 if Plotting == "Subplots":
-    fig, axes = plt.subplots(3, 3)  # , sharex='col', tight_layout=True)
-    # fig.suptitle('Latency vs Time - for Scheduled Traffic and Best Effort flows - [Scheduled Traffic (ST)]', y=1)
 
     # Separate the flow dataframes for now, until you find a better
     # way of representation without doing this separation
     FlowST = Time_Data[Time_Data['Flows'] == 'ST']
     FlowBE = Time_Data[Time_Data['Flows'] == 'BE']
+    FlowST2 = Time_Data[Time_Data['Flows'] == 'ST2']
+
+    fig, axes = plt.subplots(3, 3)  # , sharex='col', tight_layout=True)
+    # fig.suptitle('Latency vs Time - for Scheduled Traffic and Best Effort flows - [Scheduled Traffic (ST)]', y=1)
 
     ''' Latency - Separate - Aggregate plot '''
     sns.boxplot(ax=axes[0, 0], data=FlowST, x='Time Axis',
                 y="Latency (ms)", showfliers=True, flierprops=flierprops).set_title('Latency vs Time (ST)')
     sns.boxplot(ax=axes[1, 0], data=FlowBE, x='Time Axis',
                 y="Latency (ms)", showfliers=True, flierprops=flierprops).set_title('Latency vs Time (BE)')
-    ax1=axes[1, 0].twinx()
-    sns.scatterplot(ax=ax1, data=AggregatedCount, x='Time Axis', y='Loss %', hue='Flows', style='Flows')
 
     # sns.despine()
 
     ''' Latency - Separate - Packet plot - CDF(Latency) '''
-    sns.ecdfplot(ax=axes[0, 2], data=FlowST, x="Latency (ms)", stat='count').set_title('CDF (ST)')
-    sns.ecdfplot(ax=axes[1, 2], data=FlowBE, x="Latency (ms)", stat='count').set_title('CDF (BE)')
+    sns.ecdfplot(ax=axes[0, 2], data=FlowST, x="Latency (ms)",
+                 stat='count', log_scale=(True, True)).set_title('CDF (ST)')
+    sns.ecdfplot(ax=axes[0, 2], data=FlowST2, x="Latency (ms)",
+                 stat='count', log_scale=(True, True))
+    sns.ecdfplot(ax=axes[1, 2], data=FlowBE, x="Latency (ms)",
+                 stat='count', log_scale=(False, True)).set_title('CDF (BE)')
     axes[0, 2].grid()
     axes[1, 2].grid()
 
     ''' Latency - One - Aggregate plot '''
-    sns.boxplot(ax=axes[2, 0], data=Time_Data, x='Time Axis', y='Latency (ms)', hue='Flows', flierprops=flierprops).set_title('Latency vs Time')
+    sns.boxplot(ax=axes[2, 0], data=Time_Data, x='Time Axis', y='Latency (ms)',
+                hue='Flows', flierprops=flierprops).set_title('Latency vs Time')
 
     ''' Latency - One - Packet plot '''
-    sns.scatterplot(ax=axes[0, 1], x="Packet Number", y="Latency (ms)", hue='Flows', size='Flows', data=Time_Data).set_title('Latency vs Time')
+    sns.scatterplot(ax=axes[0, 1], data=Time_Data, x="Packet Number", y="Latency (ms)",
+                    hue='Flows', style='Flows', size='Flows',
+                    palette='dark').set_title('Latency vs Time')
 
     ''' Count - One - Aggregate plot - Loss and Loss %age'''
-    sns.scatterplot(ax=axes[2, 2], data=AggregatedCount, x='Time Axis', y='Loss', hue='Flows').set_title('Loss vs Time')
+    sns.scatterplot(ax=axes[2, 2], data=AggregatedCount, x='Time Axis', y='Loss',
+                    hue='Flows', style='Flows', size='Flows',
+                    palette='dark').set_title('Loss vs Time')
+    ax1=axes[2, 2].twinx()
+    # sns.scatterplot(ax=ax1, data=AggregatedCount, x='Time Axis', y='Loss %', hue='Flows', style='Flows', size='Flows', palette='dark')
+    sns.lineplot(ax=ax1, data=AggregatedCount, x='Time Axis', y='Loss %',
+                 hue='Flows', style='Flows', size='Flows',
+                 palette='dark', legend=True)
 
     ''' Count - One - Packet plot - Received and Lost packets'''
     # Horizontal packets vs time
-    sns.scatterplot(ax=axes[1, 1], data=Time_Data, x='Epoch Time (Rx)', y='Missed', hue='Flows').set_title('Rx & Lost vs Time')
+    sns.scatterplot(ax=axes[1, 1], data=Time_Data, x='Epoch Time (Rx)', y='Missed',
+                    hue='Flows', style='Flows', size='Flows',
+                    palette='dark').set_title('Rx & Lost vs Time')
     # Diagnol packets vs time
     # LostPacketPlot = sns.scatterplot(ax=axes[2, 2], data=LostPacketsList, x='Epoch Time (Tx)',
     #                                  y='Packet Number', hue='Time Axis', size='Flows')('Lost vs Time')
-    sns.scatterplot(ax=axes[2, 1], data=LostPacketsList, x='Packet Number',
-                                     y='Packet Number', hue='Time Axis', size='Flows').set_title('Lost vs Time')
+    sns.scatterplot(ax=axes[2, 1], data=LostPacketsList, x='Packet Number', y='Packet Number',
+                    hue='Time Axis', size='Flows').set_title('Lost vs Time')
     axes[2, 1].set_ylim(PacketNumberMin, PacketNumberMax)
     # axes[2, 1].set_xlim(TxTimeMin, TxTimeMax)
     axes[2, 1].set_xlim(PacketNumberMin, PacketNumberMax)
@@ -165,8 +168,6 @@ if Plotting == "Subplots":
     # sns.ecdfplot(data=Time_Data, x='Missed', hue='Flows')
     plt.tight_layout()
     plt.savefig(FigureName)
-
-
 
 else:
 
@@ -204,8 +205,8 @@ else:
     plt.figure()
     PacketPlot_v0 = sns.scatterplot(data=Time_Data, x='Packet Number', y='Missed', hue='Flows')
     plt.figure()
-    LostPacketPlot = sns.scatterplot(data=LostPacketsList, x='Epoch Time (Tx)', y='Packet Number', hue='Time Axis',
-                                     size='Flows')
+    LostPacketPlot = sns.scatterplot(data=LostPacketsList, x='Epoch Time (Tx)',
+                                     y='Packet Number', hue='Time Axis', size='Flows')
     LostPacketPlot.set_ylim(PacketNumberMin, PacketNumberMax)
     LostPacketPlot.set_xlim(TxTimeMin, TxTimeMax)
     # sns.displot(Time_Data, x='Packet Number', bins=33, hue='Flows', multiple="dodge", discrete=True)

@@ -33,8 +33,8 @@ FigureNameLostCount = '../TempFigures/LostCount_' + \
 csvFilename = '../TempCSVfiles/MergedTxRx_' + ST + \
               BE + 'Dur' + Duration + FileDate + '.csv'
 
-dftx = pd.read_csv("../TempCSVfiles/TXv1.csv")
-dfrx = pd.read_csv("../TempCSVfiles/RXv1.csv")
+dftx = pd.read_csv("../../TempCSVfiles/TXv1.csv")
+dfrx = pd.read_csv("../../TempCSVfiles/RXv1.csv")
 
 dftx.rename(columns={"udp.dstport": "Flows"}, inplace=True)
 dfrx.rename(columns={"udp.dstport": "Flows"}, inplace=True)
