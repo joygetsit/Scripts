@@ -50,7 +50,7 @@ tcpreplay -i $LocalCaptureEthernetInterface -M $BandwidthBEFlow --duration=$Dura
 echo ' '
 echo 'Step 3: Check if packet capture successful by checking if file exists in remote node'
 sleep 10
-ssh zenlab@$RemoteIP "ls /tmp/ | grep rx"
+ssh zenlab@$RemoteIP "ls -al /tmp/ | grep rx"
 
 echo 'Step 4: Transfer Tx capture from remote to local system for analysis'
 scp -C zenlab@$RemoteIP:$RemoteCapture $RXfile

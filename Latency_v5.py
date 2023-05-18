@@ -1,4 +1,4 @@
-#!./venv/bin/python3
+#!/home/venv/bin/python3
 
 import sys
 import datetime
